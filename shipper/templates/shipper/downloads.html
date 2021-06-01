@@ -1,51 +1,121 @@
-{% extends 'user_base.html' %}
+{% extends 'base.html' %}
 
 {% block title %}Downloads{% endblock %}
 
-{% block content %}
-    <div class="container">
-        <table class="table">
-            <thead>
-            <tr>
-                <th scope="col">Device</th>
-                <th scope="col">Download Latest</th>
-            </tr>
-            </thead>
-            <tbody>
-            {% for device in object_list %}
-                <tr>
-                    {% if device.has_builds %}
-                        {% if device.status %}
-                            <td><a href="download/{{ device.codename }}/">{{ device }}</a></td>
-                        {% else %}
-                            <td class="text-reset text-decoration-line-through"
-                                title="This device is no longer supported.">
-                                <a class="text-reset text-decoration-line-through"
-                                   href="download/{{ device.codename }}/">{{ device }}</a>
-                            </td>
-                        {% endif %}
-                        <td>
-                            {% if device.has_gapps_builds %}
-                                <a href="download/{{ device.codename }}/{{ device.get_latest_gapps_build_object.id }}/"
-                                   class="btn btn-primary btn-sm" title="">GApps</a>
-                            {% endif %}
-                            {% if device.has_vanilla_builds %}
-                                <a href="download/{{ device.codename }}/{{ device.get_latest_vanilla_build_object.id }}"
-                                   class="btn btn-secondary btn-sm">Non-GApps</a>
-                            {% endif %}
-                            {% if device.has_foss_builds %}
-                                <a href="download/{{ device.codename }}/{{ device.get_latest_foss_build_object.id }}"
-                                   class="btn btn-warning btn-sm">FOSS</a>
-                            {% endif %}
-                            {% if device.has_goapps_builds %}
-                                <a href="download/{{ device.codename }}/{{ device.get_latest_goapps_build_object.id }}"
-                                   class="btn btn-dark btn-sm">Go Apps</a>
-                            {% endif %}
-                        </td>
-                    {% endif %}
-                </tr>
-            {% endfor %}
-            </tbody>
-        </table>
+{% block base_content %}
+    <style>
+        body,
+        html {
+            width: 100%;
+            height: 100%;
+            font-family: 'Roboto',sans-serif;
+        }
+    
+        .bliss-logo-wrapper {
+            height: 155px;
+            width: 100%;
+            background: rgba(200, 200, 200, 0.4);
+        }
+    
+        .bliss-logo-wrapper img {
+            display: inline-block;
+        }
+    
+        .bliss-logo-wrapper h5 {
+            color: white;
+        }
+    
+        .build-btn a {
+            text-decoration: none;
+        }
+    
+        .container-fluid {
+            background-color: rgba(0, 0, 0, 0.9);
+            color: rgba(200, 200, 200, 0.5);
+            height: 100%;
+            padding: 0;
+        }
+    
+        .company-wrapper {
+            width: 20%;
+            max-width: 350px;
+            border-right: 1px solid rgba(100, 100, 100, 0.8);
+        }
+    
+        .company-list {
+            list-style: none;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            padding: 0;
+            margin: 0;
+        }
+    
+        .company-list li {
+            height: 42px;
+            width: 100%;
+            padding: 5px;
+            border-bottom: 0.2px solid rgba(100, 100, 100, 0.5);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            cursor: pointer;
+            transition: all 0.4s;
+        }
+    
+        .company-list li:hover {
+            background-color: rgba(200, 200, 200, 0.6);
+            color: rgba(0, 0, 0, 0.7);
+        }
+    
+        .device-list-item {
+            border-bottom: 0.2px solid rgba(100, 100, 100, 0.5);
+            transition: all 0.4s;
+        }
+    
+        .device-list-item:hover {
+            background: rgba(200, 200, 200, 0.6);
+            color: rgba(0, 0, 0, 0.7);
+            /* background: rgba() */
+        }
+    </style>
+    <div class="container-fluid">
+        
     </div>
+    <script>
+        let deviceList = [
+            {% for device in object_list %}
+            {% if not forloop.first %},{% endif %}
+            {
+                 manufacturer: "{{device.manufacturer}}",
+                hasBuilds: "{{device.has_builds}}",
+                status: "{{device.status}}",
+                codename: "{{device.codename}}",
+                hasGappsBuilds: "{{device.has_gapps_builds}}",
+                gappsBuildId: "{{device.get_latest_gapps_build_object.id}}",
+                hasVanillaBuilds: "{{device.has_vanilla_builds}}",
+                vanillaBuildId: "{{ device.get_latest_vanilla_build_object.id }}",
+                hasFossBuilds: "{{device.has_foss_builds}}",
+                fossBuildId: "{{ device.get_latest_foss_build_object.id }}",
+                hasGoappsBuilds: "{{device.has_foss_builds}}",
+                goappsBuildId: "{{ device.get_latest_goapps_build_object.id }}",
+            }
+            {% endfor %}
+            ];
+        
+            let formattedDeviceData = {};
+        
+            function formatDeviceData() {
+                const formattedData = {};
+                deviceList.map(device => {
+                    if (formattedData[device.manufacturer]) {
+                        formattedData[device.manufacturer].devices.push({ ...device });
+                    } else {
+                        formattedData[device.manufacturer] = { devices: [ {...device }]};
+                    }
+                });
+        
+                formattedDeviceData = formattedData;
+            }
+    </script>
 {% endblock %}
