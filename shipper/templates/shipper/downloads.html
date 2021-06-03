@@ -23,6 +23,11 @@
     
         .bliss-logo-wrapper h5 {
             color: white;
+            cursor: pointer;
+        }
+
+        .bliss-logo-wrapper h5:hover {
+            color: #0b5ed7;
         }
     
         .build-btn a {
@@ -38,8 +43,9 @@
     
         .company-wrapper {
             width: 20%;
-            max-width: 350px;
-            border-right: 1px solid rgba(100, 100, 100, 0.8);
+            max-width: 290px;
+            min-width: 200px;
+            border-right: 0.2px solid rgba(100, 100, 100, 0.5);
         }
     
         .company-list {
@@ -49,12 +55,15 @@
             overflow: auto;
             padding: 0;
             margin: 0;
+						opacity: 0;
+            transition: all 1s;
         }
     
         .company-list li {
             height: 42px;
             width: 100%;
             padding: 5px;
+            padding-left: 15px;
             border-bottom: 0.2px solid rgba(100, 100, 100, 0.5);
             display: flex;
             align-items: center;
@@ -78,19 +87,77 @@
             color: rgba(0, 0, 0, 0.7);
             /* background: rgba() */
         }
+
+        .transparent {
+            opacity: 0;
+        }
+
+        .device-list {
+            display: flex;
+            flex-wrap: wrap;
+            flex: 1;
+            width: 100%;
+            height: 100%;
+        }
+
+        .device-wrapper {
+            height: 300px;
+            background-color: rgba(0, 0, 0, 0.4);
+            color: rgba(200, 200, 200, 0.8);
+            width: 250px;
+            border-radius: 5px;
+            padding: 15px;
+            margin: 20px;
+            transition: all 0.6s;
+        }
+
+        .device-wrapper:hover {
+            height: 302px;
+            background-color: rgba(200, 200, 200, 0.6);
+            color: rgba(0, 0, 0, 0.7);
+            box-shadow: 2px 2px 20px rgba(100, 100, 100, 0.5);
+        }
+
+        .avatar {
+            height: 75px;
+            margin-top: 30px;
+            width: 75px;
+            border-radius: 50%;
+            border: 0.2px solid rgba(100, 100, 100, 0.2);
+        }
+
+        .avatar-reveal:hover {
+            border-radius: 2px;
+        }
+
+        #deviceListWrapper {
+            width: 100%;
+            padding-top: 24px;
+        }
     </style>
-    <div class="container-fluid">
-        
+    <div class="container-fluid d-flex transparent">
+        <div class="company-wrapper">
+            <div class="bliss-logo-wrapper d-flex flex-column justify-content-center align-items-center">
+                <img src="https://blissroms.com/images/BlissIcon_Smal_wl.png" />
+                <h5 onclick="handleLinkClick('{{main_website_url}}')">Bliss ROMs</h5>
+            </div>
+            <ul class="company-list">
+            </ul>
+        </div>
+        <div id='deviceListWrapper'></div>
     </div>
+    
     <script>
         let deviceList = [
             {% for device in object_list %}
             {% if not forloop.first %},{% endif %}
             {
                  manufacturer: "{{device.manufacturer}}",
+                 name: "{{device.name}}",
                 hasBuilds: "{{device.has_builds}}",
                 status: "{{device.status}}",
                 codename: "{{device.codename}}",
+                photo: "{{device.photo}}",
                 hasGappsBuilds: "{{device.has_gapps_builds}}",
                 gappsBuildId: "{{device.get_latest_gapps_build_object.id}}",
                 hasVanillaBuilds: "{{device.has_vanilla_builds}}",
@@ -104,18 +171,119 @@
             ];
         
             let formattedDeviceData = {};
-        
-            function formatDeviceData() {
-                const formattedData = {};
-                deviceList.map(device => {
-                    if (formattedData[device.manufacturer]) {
-                        formattedData[device.manufacturer].devices.push({ ...device });
-                    } else {
-                        formattedData[device.manufacturer] = { devices: [ {...device }]};
+
+                function formatDeviceData() {
+                    const formattedData = {};
+                    deviceList.map(device => {
+                        if (formattedData[device.manufacturer]) {
+                            formattedData[device.manufacturer].devices.push({ ...device });
+                        } else {
+                            formattedData[device.manufacturer] = { devices: [{ ...device }] };
+                        }
+                    });
+
+                    formattedDeviceData = formattedData;
+                }
+
+                function createManufacturerList() {
+                    const list = document.getElementsByClassName('company-list')[0];
+                    if (list) {
+                        let listInnerHTML = '';
+                        if (formattedDeviceData && Object.keys(formattedDeviceData).length > 0) {
+                            listInnerHTML += `<li onclick="handleManufacturerClick('All')">All</li>`;
+                            Object.keys(formattedDeviceData).forEach(manufacturer => {
+                                if (formattedDeviceData[manufacturer].devices.find(device => device.hasBuilds === 'True')) {
+                                    listInnerHTML += `<li onclick="handleManufacturerClick('${manufacturer}')">${manufacturer}</li>`;
+                                }
+                            });
+                        } else {
+                            listInnerHTML = 'No devices found.';
+                        }
+
+                        list.innerHTML = listInnerHTML;
                     }
-                });
-        
-                formattedDeviceData = formattedData;
-            }
+                }
+
+                function getDeviceHTML(device) {
+                    if (device.hasBuilds === 'False') {
+                        return '';
+                    }
+
+                    let deviceHTML = '<div class="device-wrapper d-flex flex-column justify-content-start align-items-center">';
+                    let imgSrc = 'https://blissroms.com/images/BlissIcon_Smal_wl.png';
+                    if (device.photo) {
+                        imgSrc = device.photo;
+                    }
+
+                    deviceHTML += `<img src="${imgSrc}" class="avatar avatar-reveal mb-2" />`;
+                    deviceHTML += '<div class="d-flex flex-column align-items-center justify-content-between flex-grow-1">';
+                    deviceHTML += `<h6 class="${device.status ? '' : 'text-reset text-decoration-line-through'}" title="${device.status ? '' : 'This device is no longer supported.'}">${device.name}</h6>`;
+                    deviceHTML += '<div>'
+                    deviceHTML += '<p>Available Builds:</p>';
+                    if (device.hasGappsBuilds === 'True') {
+                        deviceHTML += `<button class='btn btn-primary btn-sm me-1' onclick="handleLinkClick('download/${device.codename}/${device.gappsBuildId}')">GApps</button>`;
+                    }
+
+                    if (device.hasVanillaBuilds === 'True') {
+                        deviceHTML += `<button class='btn btn-secondary btn-sm me-1' onclick="handleLinkClick('download/${device.codename}/${device.vanillaBuildId}')">Non-GApps</button>`;
+                    }
+
+                    if (device.hasFossBuilds === 'True') {
+                        deviceHTML += `<button class='btn btn-secondary btn-sm me-1' onclick="handleLinkClick('download/${device.codename}/${device.fossBuildId}')">FOSS</button>`;
+                    }
+
+                    if (device.hasGoappsBuilds === 'True') {
+                        deviceHTML += `<button class='btn btn-secondary btn-sm me-1' onclick="handleLinkClick('download/${device.codename}/${device.goappsBuildId}')">Go Apps</button>`;
+                    }
+                    deviceHTML += '</div>';
+                    deviceHTML += '</div>';
+
+                    deviceHTML += '</div>';
+
+                    return deviceHTML;
+                }
+
+                function handleLinkClick(url) {
+                    window.location.assign(url);
+                }
+
+                function handleManufacturerClick(manufacturer = 'All') {
+                    let devices = deviceList;
+                    if (formattedDeviceData[manufacturer]) {
+                        devices = formattedDeviceData[manufacturer].devices;
+                    }
+
+                    let devicesHTML = `<h2 class='text-center'>${manufacturer} devices</h2><div class='device-list'>`;
+                    devices.forEach(device => {
+                        devicesHTML += getDeviceHTML(device);
+                    });
+
+                    devicesHTML += '</div>';
+
+                    document.getElementById('deviceListWrapper').innerHTML = devicesHTML;
+                }
+
+                function showManufacturers() {
+                    const list = document.getElementsByClassName('company-list')[0];
+                    if (list) {
+                        list.style.opacity = 1;
+                    }
+                }
+
+                function showPageContent() {
+                    const pageContainer = document.getElementsByClassName('container-fluid')[0];
+                    pageContainer.classList.remove('transparent');
+                }
+
+                function init() {
+                    debugger;
+                    formatDeviceData();
+                    createManufacturerList();
+					showPageContent();
+                    showManufacturers();
+                    handleManufacturerClick('All');
+                }
+
+                init();
     </script>
 {% endblock %}
